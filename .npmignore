@@ -108,8 +108,6 @@ tests/
 # Documentation build
 docs/
 
-# API documentation (may contain sensitive endpoints)
-metabase-api-documentation.json
 
 # Development scripts
 scripts/
