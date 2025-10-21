@@ -16,28 +16,23 @@ The Metabase MCP Server bridges the gap between conversational AI and business i
 
 ### Installation
 
-Install via npm:
+Install via yarn:
 
 ```bash
-npm install -g metabase-mcp
+yarn global add metabase-mcp
 ```
 
 Or use with npx:
 
 ```bash
-npx metabase-mcp
+npx -y metabase-mcp
 ```
 
 ### Configuration
 
-Create a `.env` file in your project directory:
+The server requires environment variables to authenticate with your Metabase instance. These should be configured in your Claude Desktop MCP settings (see Claude Desktop Integration section above) or in a `.env` file if running standalone.
 
-```bash
-# Copy the example configuration
-cp .env.example .env
-```
-
-Update `.env` with your Metabase credentials:
+**Required Environment Variables:**
 
 ```env
 # Your Metabase instance URL
@@ -47,27 +42,42 @@ METABASE_URL=https://your-metabase-instance.com
 METABASE_API_KEY=mb_your_api_key_here
 ```
 
+**Optional Authentication Alternatives:**
+
+```env
+METABASE_SESSION_TOKEN=your_session_token
+# OR
+METABASE_USERNAME=your_username
+METABASE_PASSWORD=your_password
+```
+
 ### Claude Desktop Integration
 
-Add to your Claude Desktop MCP configuration:
+Add to your Claude Desktop MCP configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
   "mcpServers": {
     "metabase": {
       "command": "npx",
-      "args": ["metabase-mcp"]
+      "args": ["-y", "metabase-mcp"],
+      "env": {
+        "METABASE_URL": "https://your-metabase-instance.com",
+        "METABASE_API_KEY": "mb_your_api_key_here"
+      }
     }
   }
 }
 ```
+
+**Note:** The server requires environment variables to function. You must provide at minimum `METABASE_URL` and either `METABASE_API_KEY` or alternative authentication credentials in the `env` section.
 
 ## Features
 
 ### 🎯 Core Capabilities
 
 - **API Discovery**: Explore 355+ Metabase API endpoints across 56 categories
-- **Resource Browsing**: Access dashboards, questions, and databases as MCP resources  
+- **Resource Browsing**: Access dashboards, questions, and databases as MCP resources
 - **Direct API Execution**: Make authenticated calls to any Metabase endpoint
 - **Advanced Response Processing**: Intelligent data selection with schema generation
 - **Resource URL Generation**: Automatic links to created dashboards and questions
@@ -79,6 +89,7 @@ Add to your Claude Desktop MCP configuration:
 Execute authenticated API calls to your Metabase instance with advanced response processing.
 
 **Key Features:**
+
 - Automatic authentication using environment variables
 - Path parameter substitution
 - Query parameter handling
@@ -106,15 +117,11 @@ Execute authenticated API calls to your Metabase instance with advanced response
 
 ```json
 {
-  "name": "api_call", 
+  "name": "api_call",
   "arguments": {
     "path": "/api/card",
     "method": "GET",
-    "selectors": [
-      "root[0:10].name",
-      "root[*].id",
-      "root[5].collection.name"
-    ]
+    "selectors": ["root[0:10].name", "root[*].id", "root[5].collection.name"]
   }
 }
 ```
@@ -169,7 +176,7 @@ Search through API endpoints by category, method, or keywords.
 Access Metabase resources directly through the MCP resource system:
 
 - **Dashboards**: `metabase://dashboard/{id}`
-- **Questions/Cards**: `metabase://card/{id}`  
+- **Questions/Cards**: `metabase://card/{id}`
 - **Databases**: `metabase://database/{id}`
 
 Resources are automatically discovered and cached for efficient browsing.
@@ -179,6 +186,7 @@ Resources are automatically discovered and cached for efficient browsing.
 The server provides intelligent response processing with:
 
 **Schema Generation**: Automatic schema generation for complex API responses
+
 ```json
 {
   "type": "array",
@@ -186,19 +194,21 @@ The server provides intelligent response processing with:
   "itemSchema": {
     "type": "object",
     "properties": {
-      "id": {"type": "number"},
-      "name": {"type": "string"}
+      "id": { "type": "number" },
+      "name": { "type": "string" }
     }
   }
 }
 ```
 
 **Path Selectors**: Extract specific data using path notation
+
 - `root[*].name` - Get all names from array items
-- `root[0:10].id` - Get IDs from first 10 items  
+- `root[0:10].id` - Get IDs from first 10 items
 - `root[5].collection.name` - Get nested field from specific item
 
 **Resource URLs**: Automatic URL generation for created resources
+
 ```json
 {
   "resourceUrl": "https://metabase.company.com/dashboard/123",
@@ -214,9 +224,9 @@ The server provides intelligent response processing with:
 {
   "name": "api_call",
   "arguments": {
-    "path": "/api/card/{card-id}/query", 
+    "path": "/api/card/{card-id}/query",
     "method": "POST",
-    "pathParams": {"card-id": 42}
+    "pathParams": { "card-id": 42 }
   }
 }
 ```
@@ -228,7 +238,7 @@ The server provides intelligent response processing with:
   "name": "api_call",
   "arguments": {
     "path": "/api/dashboard",
-    "method": "POST", 
+    "method": "POST",
     "body": {
       "name": "Weekly Analytics",
       "description": "Automated weekly dashboard"
@@ -245,7 +255,7 @@ The server provides intelligent response processing with:
   "arguments": {
     "path": "/api/database/{db-id}/schema",
     "method": "GET",
-    "pathParams": {"db-id": 1}
+    "pathParams": { "db-id": 1 }
   }
 }
 ```
@@ -275,50 +285,6 @@ METABASE_USERNAME=your_username
 METABASE_PASSWORD=your_password
 ```
 
-## Security
-
-This package is designed for secure npm distribution:
-
-- ✅ Environment variables for sensitive data
-- ✅ No hardcoded API keys or secrets
-- ✅ Comprehensive `.npmignore` excludes sensitive files
-- ✅ Source code excluded from npm package
-- ✅ Only compiled distribution included
-
-## Development
-
-### Local Setup
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd metabase-mcp
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run in development mode
-npm run dev
-```
-
-### Project Structure
-
-```
-src/
-├── index.ts              # Main MCP server
-├── types.ts              # TypeScript type definitions
-├── resources/
-│   └── manager.ts        # MCP resource management
-└── tools/
-    ├── api_call.ts       # Direct API execution
-    ├── list_api_spec.ts  # API endpoint listing
-    ├── get_api_spec.ts   # Endpoint documentation
-    └── search_api_spec.ts # API search functionality
-```
-
 ## API Coverage
 
 The server provides access to all major Metabase API categories:
@@ -331,7 +297,7 @@ The server provides access to all major Metabase API categories:
 
 ## Requirements
 
-- **Node.js**: 18+ 
+- **Node.js**: 18+
 - **Metabase**: Any version with API access
 - **Credentials**: Valid API key or session token
 
@@ -340,16 +306,19 @@ The server provides access to all major Metabase API categories:
 ### Common Issues
 
 **Authentication Errors**
+
 - Verify your API key is correct and starts with `mb_`
 - Ensure your Metabase URL is accessible
 - Check that your API key has sufficient permissions
 
 **Connection Issues**
+
 - Verify the METABASE_URL is correct and accessible
 - Check network connectivity to your Metabase instance
 - Ensure no firewall blocking the connection
 
 **Resource Loading Failures**
+
 - Resources may take time to load on first connection
 - Check Metabase permissions for the API key user
 - Verify the API key can access the requested resources
@@ -359,12 +328,18 @@ The server provides access to all major Metabase API categories:
 Enable debug logging by setting the environment variable:
 
 ```bash
-DEBUG=metabase-mcp npm start
+DEBUG=metabase-mcp yarn start
 ```
 
 ## Contributing
 
-Contributions are welcome! Please see our contributing guidelines for more information.
+Contributions are welcome! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+
+- Setting up your development environment
+- Project structure and architecture
+- Security best practices for contributors
+- Code style and standards
+- Submitting pull requests
 
 ## License
 
@@ -373,6 +348,7 @@ MIT License - see LICENSE file for details.
 ## Support
 
 For issues and questions:
+
 - GitHub Issues: Report bugs and feature requests
 - Documentation: Complete API reference available at your Metabase instance `/api/docs`
 
